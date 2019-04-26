@@ -12,7 +12,7 @@ Enzyme.configure({ adapter: new EnzymeAdapter() });
  * @param {object} state component state
  * @returns {ShallowWrapper}
  */
-const setup = (props = {}, state = null) => {
+const setup = (props = {}, state = {}) => {
   const wrapper = shallow(<App {...props} />);
   if (state) wrapper.setState(state);
 
@@ -64,4 +64,50 @@ test("clicking button increments the counter in the display", () => {
   // find display and test value
   const counterDisplay = findByTestAttr(wrapper, "counter-display");
   expect(counterDisplay.text()).toContain(counter + 1);
+});
+
+test("Clicking the decrement button", () => {
+  const counter = 1;
+  const wrapper = setup(null, { counter });
+  const button = findByTestAttr(wrapper, "decrement-button");
+  //click the decrement button
+  button.simulate("click");
+  wrapper.update();
+  // find display and test value
+  const counterDisplay = findByTestAttr(wrapper, "counter-display");
+  expect(counterDisplay.text()).toContain(counter - 1);
+});
+
+test("it renders the decrement button", () => {
+  const wrapper = setup();
+  const button = findByTestAttr(wrapper, "decrement-button");
+  expect(button.length).toBe(1);
+});
+
+describe("Testing the decrement button when count is at 0", () => {
+  let wrapper;
+
+  beforeEach(() => {
+    wrapper = setup();
+
+    const button = findByTestAttr(wrapper, "decrement-button");
+
+    button.simulate("click");
+    wrapper.update();
+  });
+
+  test("Clicking decrement button to below zero results in error", () => {
+    const counterDisplay = findByTestAttr(wrapper, "counter-display");
+    expect(counterDisplay.text()).toContain("Cannot go lower than zero");
+    expect(wrapper.state("counter")).toBe(0);
+  });
+
+  test("increment after zero error to result in counter being shown as 1", () => {
+    const incrementButton = findByTestAttr(wrapper, "increment-button");
+    // after error
+    incrementButton.simulate("click");
+    wrapper.update();
+    const counterDisplay = findByTestAttr(wrapper, "counter-display");
+    expect(counterDisplay.text()).toContain(1);
+  });
 });
